@@ -1,5 +1,6 @@
-import { Button, Code, Display, Image, Spacer, Table, Text, Modal, useModal } from '@geist-ui/react';
+import { Button, Code, Display, Image, Spacer, Table, Text, Modal, useModal, Textarea } from '@geist-ui/react';
 import React, { useState } from 'react';
+import Edit from '../Edit';
 // Display
 
 
@@ -9,13 +10,13 @@ const ScreenItem = ({data, id, ...props}) => {
 
 
 
-    const parseTableData = (data, mapForm = (form) => form) => {
+    const parseTableData = (data, mapForm = ({row}) => row) => {
         if(!data){
             return []
         }
         let result =Object.keys(data).map(key => ({
             id: key,
-            ...mapForm(data[key])
+            ...mapForm({row: data[key], data: data})
         }))
         return result
     }
@@ -24,9 +25,19 @@ const ScreenItem = ({data, id, ...props}) => {
     const { visible, setVisible, bindings } = useModal();
 
     const [displayData, setDisplayData] = useState({
-        selectedJSON: ''
+        selectedAPI: {}
     })
 
+
+    const parseJson = (string) => {
+        try{
+            return JSON.stringify(JSON.parse(string), undefined, 4)
+        }
+        catch{
+            console.log(37, string)
+            return string
+        }
+    }
 
 
 
@@ -37,22 +48,28 @@ const ScreenItem = ({data, id, ...props}) => {
             {/* <div style={styles.item}>
                 {id}
             </div> */}
+            
             <div  style={styles.item}>
-                <Text style={{textAlign:"center"}} h6>{data.title}</Text>
+                <div style={{display:"flex", justifyContent:"space-between"}}>
+                <Text  h6>{data.title}</Text>
+                <Button onClick={() => setVisible(true)} auto type='secondary-light' size='mini'>Edit </Button>
+                </div>
+                
                 <Image src={data.image} width={200} height={450}></Image>
-                <Text style={{textAlign:"center"}}>{data.description}</Text>
+                <Text style={{textAlign:"center"}} size='small' p>{data.description}</Text>
             </div>
             <div style={{...styles.item, flex:3}}>
-                <Table data={parseTableData(data?.apis, (form) => ({
-                    ...form,
+                <Table data={parseTableData(data?.apis, ({row}) => ({
+                    ...row,
                     format: 
                     (<>
-                        {form.format.substring(0, 50)}
+                        {row.format.substring(0, 50)}
                         <Spacer/>
                         <Button auto onClick={() => {
+                            console.log(row.format)
                             setDisplayData(prev => ({
                                 ...prev,
-                                selectedJSON: form.format
+                                selectedJSON: row.format
                             }))
                             setVisible(true)
                         }}  size='mini'>View</Button>
@@ -71,9 +88,10 @@ const ScreenItem = ({data, id, ...props}) => {
                 </Table>
             </div>
         </div>
-        <Modal {...bindings}>
-            <Text>{displayData.selectedJSON}</Text>
+        <Modal width='80vw' {...bindings}>
+            <Textarea minHeight='500px' value={parseJson(displayData.selectedJSON)}></Textarea>
         </Modal>
+
     </Display>
     )
 }
